@@ -20,6 +20,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from email.message import EmailMessage
+import requests
 
 log = logging.getLogger("bhumisetu")
 
@@ -100,7 +101,7 @@ def _have(*names) -> bool:
 def channel_status() -> dict:
     live = {
         "email": _have("GMAIL_USER", "GMAIL_APP_PASSWORD"),
-        "sms": _have("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_SMS_FROM"),
+        "sms": _have("FAST2SMS_API_KEY"),
         "whatsapp": _have("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_WHATSAPP_FROM"),
     }
     return {
@@ -136,6 +137,31 @@ def _twilio(to: str, from_: str, body: str):
             raise RuntimeError(f"Twilio returned {resp.status}")
 
 
+# def send_otp(channel: str, destination: str, code: str) -> dict:
+#     """Returns {ok, dev}. dev=True means nothing was delivered; the code was
+#     printed to the console instead (demo mode)."""
+#     status = channel_status().get(channel)
+#     if not status:
+#         return {"ok": False, "dev": False}
+#     if not status["live"]:
+#         if dev_mode():
+#             print(f"\n[BhumiSetu DEV] {channel} OTP for {destination}: {code}\n", flush=True)
+#             return {"ok": True, "dev": True}
+#         return {"ok": False, "dev": False}
+#     try:
+#         if channel == "email":
+#             _send_email(destination, code)
+#         elif channel == "sms":
+#             _twilio(f"+91{destination}", os.environ["TWILIO_SMS_FROM"], _message(code))
+#         else:
+#             _twilio(f"whatsapp:+91{destination}", os.environ["TWILIO_WHATSAPP_FROM"], _message(code))
+#         return {"ok": True, "dev": False}
+#     except (smtplib.SMTPException, urllib.error.URLError, RuntimeError, OSError) as exc:
+#         log.error("OTP delivery failed on %s: %s", channel, exc)
+#         return {"ok": False, "dev": False}
+
+
+
 def send_otp(channel: str, destination: str, code: str) -> dict:
     """Returns {ok, dev}. dev=True means nothing was delivered; the code was
     printed to the console instead (demo mode)."""
@@ -151,13 +177,23 @@ def send_otp(channel: str, destination: str, code: str) -> dict:
         if channel == "email":
             _send_email(destination, code)
         elif channel == "sms":
-            _twilio(f"+91{destination}", os.environ["TWILIO_SMS_FROM"], _message(code))
+            # Fast2SMS Integration
+            url = "https://www.fast2sms.com/dev/bulkV2"
+            querystring = {
+                "authorization": os.environ["FAST2SMS_API_KEY"],
+                "variables_values": str(code),
+                "route": "otp",
+                "numbers": destination 
+            }
+            res = requests.get(url, headers={'cache-control': "no-cache"}, params=querystring)
+            res.raise_for_status()
         else:
+            # WhatsApp still uses Twilio
             _twilio(f"whatsapp:+91{destination}", os.environ["TWILIO_WHATSAPP_FROM"], _message(code))
         return {"ok": True, "dev": False}
-    except (smtplib.SMTPException, urllib.error.URLError, RuntimeError, OSError) as exc:
+    except Exception as exc: # Broad exception to handle network/API errors
         log.error("OTP delivery failed on %s: %s", channel, exc)
-        return {"ok": False, "dev": False}
+        return {"ok": False, "dev": False}    
 
 
 # ----------------------------------------------------- pin-code service areas
