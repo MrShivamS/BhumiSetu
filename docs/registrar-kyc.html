@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#33513B">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https: http://localhost:* http://127.0.0.1:*; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; frame-src https://accounts.google.com; base-uri 'none'; form-action 'none'">
+<title>KYC requests - BhumiSetu</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="site-header"><div class="header-inner" id="hdr"></div></header>
+<main class="wrap" id="main">
+<div class="page-title"><h2>KYC requests</h2></div>
+<section class="panel">
+  <div class="alert info" id="noArea" hidden>You have no PIN codes assigned, so no requests are shown. Ask the administrator to run:
+    <code>python manage.py set-pincodes &lt;your mobile or email&gt; "411001, 4120*"</code></div>
+  <p class="sub" id="area"></p>
+  <div class="tabs" id="tabs">
+    <button type="button" class="tab on" data-s="pending">Pending <span class="n" id="n-pending">0</span></button>
+    <button type="button" class="tab" data-s="approved">Approved <span class="n" id="n-approved">0</span></button>
+    <button type="button" class="tab" data-s="rejected">Rejected <span class="n" id="n-rejected">0</span></button>
+    <button type="button" class="tab" data-s="all">All</button>
+  </div>
+  <form id="filters" class="filter-row">
+    <div class="field"><label for="pin">PIN code (or start of it)</label><input id="pin" type="search" inputmode="numeric" maxlength="6" placeholder="e.g. 411 or 411045"></div>
+    <div class="field"><label for="q">Name</label><input id="q" type="search" placeholder="Search by name"></div>
+    <button class="btn" type="submit">Filter</button>
+    <button class="btn ghost" type="button" id="clear">Clear</button>
+  </form>
+  <div class="alert" id="listMsg" hidden style="margin-top:14px"></div>
+  <div class="table-scroll" style="margin-top:14px"><table class="ledger" id="list" hidden>
+    <thead><tr><th>Submitted</th><th>Name</th><th>PIN</th><th>District</th><th>Status</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
+  <p class="muted" id="empty" hidden style="margin-top:12px">No requests match.</p>
+</section>
+<section class="panel" id="detail" hidden>
+  <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center"><h3 id="dName"></h3><span class="chip" id="dStatus"></span></div>
+  <div class="alert err" id="dWarn" hidden style="margin-top:14px"></div>
+  <div class="grid2" style="margin-top:16px">
+    <div><h3 style="font-size:16px;margin-bottom:6px">Submitted details</h3><dl class="details" id="dList"></dl></div>
+    <div><h3 style="font-size:16px;margin-bottom:6px">Aadhaar photos <span class="muted">(click to enlarge)</span></h3>
+      <div class="kycimgs"><figure><img id="imgFront" alt="Aadhaar front" class="zoomable"><figcaption>Front</figcaption></figure>
+        <figure><img id="imgBack" alt="Aadhaar back" class="zoomable"><figcaption>Back</figcaption></figure></div></div>
+  </div>
+  <div id="decide" hidden style="margin-top:22px;border-top:1px solid var(--line);padding-top:18px">
+    <div class="grid2">
+      <div><h3 style="font-size:16px;margin-bottom:8px">Approve</h3>
+        <label class="check"><input type="checkbox" id="confirm"> <span>I checked every detail against both photos. The name, number, date of birth and address match.</span></label>
+        <button class="btn" id="approve" type="button">Approve KYC</button></div>
+      <div><h3 style="font-size:16px;margin-bottom:8px">Reject</h3>
+        <div class="field"><label for="reason">Reason</label><select id="reason"><option value="">Choose a reason...</option></select></div>
+        <div class="field"><label for="note">Note to the user (required for "Other")</label><input id="note" type="text" maxlength="300"></div>
+        <button class="btn ghost" id="reject" type="button">Reject KYC</button></div>
+    </div>
+  </div>
+  <div class="alert" id="dMsg" hidden style="margin-top:14px"></div>
+</section>
+</main>
+<footer>BhumiSetu - prototype for land record verification</footer>
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+<script src="js/registrar-kyc.js"></script>
+</body>
+</html>

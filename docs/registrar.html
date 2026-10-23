@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#33513B">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https: http://localhost:* http://127.0.0.1:*; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; frame-src https://accounts.google.com; base-uri 'none'; form-action 'none'">
+<title>Add documents - BhumiSetu</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="site-header"><div class="header-inner" id="hdr"></div></header>
+<main class="wrap" id="main">
+<div class="page-title"><h2>Add a document to the land records</h2></div>
+<section class="panel" id="uploadPanel">
+  <h3>1. Upload the sale deed</h3>
+  <p class="sub">PDF, PNG or JPG, up to 10 MB. The details are read from it automatically when reading is set up. You review everything before saving.</p>
+  <div class="drop" id="drop"><h3>Drag and drop the document here</h3><p class="sub">or</p>
+    <button class="btn" type="button" id="browse">Choose file</button>
+    <input type="file" id="file" accept="application/pdf,image/png,image/jpeg" hidden></div>
+  <p style="margin:14px 0 0" class="muted">No scan? <button class="linkbtn" id="manualBtn" type="button" style="text-decoration:underline">Enter the details by hand</button></p>
+  <div class="alert" id="upMsg" hidden style="margin-top:16px"></div>
+</section>
+<section class="panel" id="formPanel" hidden>
+  <h3>2. Review and add</h3>
+  <p class="sub" id="docLine"></p>
+  <form id="recForm" novalidate>
+    <div class="form-grid">
+      <div class="field" data-field="owner"><label for="f-owner">Owner name (buyer) *</label><input id="f-owner" name="owner" type="text" autocomplete="off"><div class="error"></div></div>
+      <div class="field" data-field="seller"><label for="f-seller">Seller name</label><input id="f-seller" name="seller" type="text" autocomplete="off"><div class="error"></div></div>
+      <div class="field" data-field="survey"><label for="f-survey">Survey number *</label><input id="f-survey" name="survey" type="text" autocomplete="off"><div class="hint">e.g. 123/4</div><div class="error"></div></div>
+      <div class="field" data-field="area"><label for="f-area">Area *</label><input id="f-area" name="area" type="text" autocomplete="off"><div class="hint">e.g. 2.5 Acres</div><div class="error"></div></div>
+      <div class="field" data-field="village"><label for="f-village">Village *</label><input id="f-village" name="village" type="text" autocomplete="off"><div class="error"></div></div>
+      <div class="field" data-field="district"><label for="f-district">District *</label><input id="f-district" name="district" type="text" autocomplete="off"><div class="error"></div></div>
+      <div class="field" data-field="property_id"><label for="f-property_id">Property ID</label><input id="f-property_id" name="property_id" type="text" autocomplete="off"><div class="hint">e.g. PID-PUN-0001</div><div class="error"></div></div>
+      <div class="field" data-field="doc_no"><label for="f-doc_no">Document number</label><input id="f-doc_no" name="doc_no" type="text" autocomplete="off"><div class="error"></div></div>
+      <div class="field" data-field="electricity_bill_no"><label for="f-electricity_bill_no">Electricity bill / consumer number</label><input id="f-electricity_bill_no" name="electricity_bill_no" type="text" autocomplete="off"><div class="error"></div></div>
+      <div class="field" data-field="property_tax_no"><label for="f-property_tax_no">Property tax number</label><input id="f-property_tax_no" name="property_tax_no" type="text" autocomplete="off"><div class="error"></div></div>
+      <div class="field" data-field="owner_aadhaar"><label for="f-owner_aadhaar">Owner Aadhaar number</label><input id="f-owner_aadhaar" name="owner_aadhaar" type="text" autocomplete="off"><div class="hint">Only a one-way reference and the last 4 digits are stored</div><div class="error"></div></div>
+      <div class="field" data-field="doc_date"><label for="f-doc_date">Date of agreement</label><input id="f-doc_date" name="doc_date" type="text" autocomplete="off"><div class="error"></div></div>
+      <div class="field" data-field="sale_amount"><label for="f-sale_amount">Sale amount</label><input id="f-sale_amount" name="sale_amount" type="text" autocomplete="off"><div class="error"></div></div>
+      <div class="field" data-field="address"><label for="f-address">Property address</label><input id="f-address" name="address" type="text" autocomplete="off"><div class="error"></div></div>
+    </div>
+    <div class="alert err" id="recMsg" hidden></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn" type="submit" id="saveBtn">Add to land records</button>
+      <button class="btn ghost" type="button" id="cancelBtn">Cancel</button></div>
+  </form>
+</section>
+<section class="panel"><h3>Recently added by you</h3>
+  <p class="sub" id="listSub">Loading...</p>
+  <div class="table-scroll"><table class="ledger" id="recent" hidden><thead><tr><th>Survey no.</th><th>Owner</th><th>Village</th><th>Property ID</th><th>Document</th></tr></thead><tbody id="recentBody"></tbody></table></div>
+</section>
+</main>
+<footer>BhumiSetu - prototype for land record verification</footer>
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+<script src="js/registrar.js"></script>
+</body>
+</html>

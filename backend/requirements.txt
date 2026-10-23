@@ -1,0 +1,8 @@
+Flask>=3.0
+pydantic>=2.0
+google-genai
+google-auth>=2.0
+requests
+python-dotenv
+Pillow
+gunicorn

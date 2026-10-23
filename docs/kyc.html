@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#33513B">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https: http://localhost:* http://127.0.0.1:*; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; frame-src https://accounts.google.com; base-uri 'none'; form-action 'none'">
+<title>Aadhaar KYC - BhumiSetu</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="site-header"><div class="header-inner" id="hdr"></div></header>
+<main class="wrap" id="main">
+<div class="page-title"><h2>Aadhaar KYC</h2></div>
+<section class="panel" id="verifiedPanel" hidden>
+  <div class="alert okay">Your KYC is verified. You can search land records.</div>
+  <dl class="details" id="verifiedList"></dl>
+  <div style="margin-top:18px"><a class="btn" href="search.html">Search land records</a></div>
+</section>
+<section class="panel" id="pendingPanel" hidden>
+  <div class="alert info"><strong>Your KYC is under review.</strong> A Sub-Registrar in your area is checking the details and photos you submitted. You can search records once it is approved.</div>
+  <dl class="details" id="pendingList"></dl>
+</section>
+<section class="panel" id="formPanel" hidden>
+  <div class="alert err" id="rejectedNote" hidden></div>
+  <p class="sub">Enter the details exactly as printed on your Aadhaar card and upload a clear photo of the front and the back. A Sub-Registrar for your PIN code checks them.</p>
+  <form id="kycForm" novalidate>
+    <div class="form-grid">
+      <div class="field" data-field="full_name"><label for="full_name">Name as on Aadhaar *</label><input id="full_name" name="full_name" type="text" autocomplete="name"><div class="error"></div></div>
+      <div class="field" data-field="dob"><label for="dob">Date of birth *</label><input id="dob" name="dob" type="date"><div class="error"></div></div>
+      <div class="field" data-field="aadhaar"><label for="aadhaar">Aadhaar number *</label><input id="aadhaar" name="aadhaar" type="text" inputmode="numeric" maxlength="14" placeholder="XXXX XXXX XXXX" autocomplete="off"><div class="hint">12 digits. We keep only the last 4 and a one-way reference.</div><div class="error"></div></div>
+      <div class="field" data-field="gender"><label for="gender">Gender *</label><select id="gender" name="gender"><option value="">Choose...</option><option>Male</option><option>Female</option><option>Other</option></select><div class="error"></div></div>
+      <div class="field wide" data-field="address"><label for="address">Address as on Aadhaar *</label><input id="address" name="address" type="text" autocomplete="street-address"><div class="error"></div></div>
+      <div class="field" data-field="city"><label for="city">Village / city *</label><input id="city" name="city" type="text"><div class="error"></div></div>
+      <div class="field" data-field="pincode"><label for="pincode">PIN code *</label><input id="pincode" name="pincode" type="text" inputmode="numeric" maxlength="6" autocomplete="postal-code"><div class="hint">This decides which office reviews your request.</div><div class="error"></div></div>
+      <div class="field" data-field="district"><label for="district">District *</label><input id="district" name="district" type="text"><div class="error"></div></div>
+      <div class="field" data-field="state"><label for="state">State *</label><input id="state" name="state" type="text"><div class="error"></div></div>
+      <div class="field" data-field="front"><label for="front">Aadhaar front *</label>
+        <label class="imgpick" for="front"><img id="frontPrev" alt="Front preview" hidden><span>Take a photo or choose a file</span></label>
+        <input type="file" id="front" accept="image/jpeg,image/png" hidden><div class="error"></div></div>
+      <div class="field" data-field="back"><label for="back">Aadhaar back *</label>
+        <label class="imgpick" for="back"><img id="backPrev" alt="Back preview" hidden><span>Take a photo or choose a file</span></label>
+        <input type="file" id="back" accept="image/jpeg,image/png" hidden><div class="error"></div></div>
+    </div>
+    <div class="field" data-field="consent"><label class="check"><input type="checkbox" id="consent"> <span>I consent to BhumiSetu storing my Aadhaar photos and details so a Sub-Registrar can verify my identity. They are visible only to the Sub-Registrar for my PIN code.</span></label><div class="error"></div></div>
+    <div class="alert err" id="kycMsg" hidden></div>
+    <button class="btn" id="kycBtn" type="submit">Submit for verification</button>
+  </form>
+</section>
+</main>
+<footer>BhumiSetu - prototype for land record verification</footer>
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+<script src="js/kyc.js"></script>
+</body>
+</html>
