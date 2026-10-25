@@ -23,7 +23,7 @@ python app.py                     # API on http://127.0.0.1:5000
 cd docs
 python -m http.server 8000        # website on http://127.0.0.1:8000
 ```
-Open http://127.0.0.1:8000. `docs/js/config.js` already points at `http://127.0.0.1:5000`. In demo mode the one-time code is shown on screen.
+Open http://127.0.0.1:8000. `docs/js/config.js` already points at `http://127.0.0.1:5000`. In demo mode (`OTP_DEV_MODE=1`) nothing is emailed: each one-time code is printed in the API's terminal as `[BhumiSetu OTP] email -> you@example.com : 123456`. It is never sent to the browser.
 
 ## 2. Put the API on Railway
 1. Push this project to a GitHub repository.
@@ -33,20 +33,25 @@ Open http://127.0.0.1:8000. `docs/js/config.js` already points at `http://127.0.
    ```
    ALLOWED_ORIGINS=https://YOURNAME.github.io     # your website's address, no path, no trailing slash
    SECRET_KEY=<a long random string>
-   OTP_DEV_MODE=0                                 # IMPORTANT: 1 shows login codes on screen
+   OTP_DEV_MODE=0                                 # 1 = demo: codes are not emailed, they appear in Railway's Logs tab (see below)
    GMAIL_USER=...   GMAIL_APP_PASSWORD=...        # without a way to send codes nobody can log in
    DATABASE_PATH=/data/bhumisetu.db
    DOC_DIR=/data/documents
    KYC_DIR=/data/kyc
    ```
-   Optional: `GEMINI_API_KEY` (reads sale deeds), `GOOGLE_CLIENT_ID` (Google sign-in).
+   Optional: `GEMINI_API_KEY` (reads sale deeds), `GOOGLE_CLIENT_ID` (Google sign-in), `FAST2SMS_API_KEY` (SMS codes).
 4. **Volume**: add a Volume to the service and mount it at `/data`. The database, sale-deed scans and Aadhaar photos live there;
    without a volume they are lost on every deploy.
 5. **Networking** > generate a public domain. You get `https://something.up.railway.app`. Open `/healthz`: it should say `ok`.
-6. Create your first Sub-Registrar (they must have signed up once on the website): in Railway's shell/CLI run
-   `python manage.py make-registrar 9876543210 --office "Haveli SRO" --pincodes "411001-411010"`.
+6. Create your first Sub-Registrar. Easiest, no shell needed: add a Variable
+   `REGISTRAR_BOOTSTRAP=officer@example.com|Haveli Sub-Registrar Office|411001-411010`
+   (several people: separate them with `;`; PIN codes can also be `4110*` or `*`). That person signs up on the website and verifies a code,
+   and is promoted automatically. The listed contact must be the one they verify (so use their email, or a mobile they confirm by SMS code),
+   otherwise someone else could sign up with that address and become a registrar. With a shell you can use `python manage.py make-registrar ...` instead.
 
-(Railway's menus change now and then; if a name above differs, look for the same idea in their docs.) Keep to 1-2 workers: the database is SQLite.
+Demo without Gmail: set `OTP_DEV_MODE=1` and read each code in the service's **Logs** (search for `BhumiSetu OTP`). Only people with access to your Railway project can see them, so keep it for testing and switch to Gmail + `OTP_DEV_MODE=0` before real users arrive.
+
+(Railway's menus change now and then; if a name above differs, look for the same idea in their docs.) The `Procfile` runs one worker with 4 threads, which suits SQLite.
 
 ## 3. Put the website on GitHub Pages
 1. Edit `docs/js/config.js`:  `window.BHUMISETU_API = "https://something.up.railway.app";`  (no trailing slash). Commit and push.
@@ -68,6 +73,7 @@ python manage.py set-pincodes   9876543210 "411001-411010"      # or "*" for eve
 python manage.py make-citizen   9876543210                      # take the role away again
 python manage.py list-users
 ```
+On Railway you can use the `REGISTRAR_BOOTSTRAP` variable instead of `manage.py` (see above). If you later demote someone with `manage.py`, remove them from that variable, or their next login promotes them again.
 
 ## KYC: a Sub-Registrar checks every request
 1. A citizen opens **KYC**, fills in the details as printed on the Aadhaar card (including the **PIN code**) and uploads the front and back photos.

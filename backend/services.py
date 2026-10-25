@@ -170,7 +170,7 @@ def send_otp(channel: str, destination: str, code: str) -> dict:
         return {"ok": False, "dev": False}
     if not status["live"]:
         if dev_mode():
-            print(f"\n[BhumiSetu DEV] {channel} OTP for {destination}: {code}\n", flush=True)
+            print(f"[BhumiSetu OTP] {channel} -> {destination} : {code}", flush=True)
             return {"ok": True, "dev": True}
         return {"ok": False, "dev": False}
     try:
@@ -185,14 +185,19 @@ def send_otp(channel: str, destination: str, code: str) -> dict:
                 "route": "otp",
                 "numbers": destination 
             }
-            res = requests.get(url, headers={'cache-control': "no-cache"}, params=querystring)
+            res = requests.get(url, headers={'cache-control': "no-cache"}, params=querystring, timeout=15)   # timeout: never let a slow SMS provider hang the server
             res.raise_for_status()
         else:
             # WhatsApp still uses Twilio
             _twilio(f"whatsapp:+91{destination}", os.environ["TWILIO_WHATSAPP_FROM"], _message(code))
         return {"ok": True, "dev": False}
     except Exception as exc: # Broad exception to handle network/API errors
-        log.error("OTP delivery failed on %s: %s", channel, exc)
+        # The Fast2SMS key travels in the URL, and requests puts the URL into its error text. Never write it to the log.
+        reason = str(exc)
+        for secret in (os.environ.get("FAST2SMS_API_KEY"), os.environ.get("GMAIL_APP_PASSWORD"), os.environ.get("TWILIO_AUTH_TOKEN")):
+            if secret:
+                reason = reason.replace(secret, "***")
+        log.error("OTP delivery failed on %s: %s", channel, reason)
         return {"ok": False, "dev": False}    
 
 

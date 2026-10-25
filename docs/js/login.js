@@ -52,7 +52,6 @@
       sentTo:
         (r.data.message || "") +
         " It is valid for 5 minutes. Not registered yet? Go back and check your details.",
-      devOtp: r.data.dev_otp,
     });
   });
 
@@ -63,7 +62,7 @@
   //   if (!r.ok) return BS.show(msg, r.data.error || 'Something went wrong.', 'err');
   //   challenge = r.data.challenge;
   //   form.hidden = true; alt.hidden = true; otpRoot.hidden = false;
-  //   flow.start({ sentTo: (r.data.message || '') + ' It is valid for 5 minutes. Not registered yet? Go back and check your details.', devOtp: r.data.dev_otp });
+  //   flow.start({ sentTo: (r.data.message || '') + ' It is valid for 5 minutes. Not registered yet? Go back and check your details.' });
   // });
   // BS.googleBlock(alt, cfg, next);
 })();

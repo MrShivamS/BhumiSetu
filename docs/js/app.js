@@ -132,15 +132,14 @@
   // ---- 6-digit code step shared by login and sign-up
   function otpFlow(root, o) {
     root.replaceChildren();
-    const sent = h('p', { class: 'sub' }), dev = h('div', { class: 'alert info', hidden: true }), msg = h('div', { class: 'alert', hidden: true });
+    const sent = h('p', { class: 'sub' }), msg = h('div', { class: 'alert', hidden: true });
     const input = h('input', { id: 'otp-input', class: 'otp-box', type: 'text', inputmode: 'numeric', autocomplete: 'one-time-code', maxlength: 6, placeholder: '------' });
     const verifyBtn = h('button', { class: 'btn block', type: 'button', text: 'Verify code' });
     const resendBtn = h('button', { class: 'linkbtn', type: 'button', text: 'Resend code', disabled: true });
     const backBtn = h('button', { class: 'linkbtn', type: 'button', text: 'Change details', onclick: () => o.onBack() });
-    root.append(h('h3', { text: 'Enter your code' }), sent, dev, h('div', { class: 'field' }, h('label', { for: 'otp-input', text: '6-digit code' }), input),
+    root.append(h('h3', { text: 'Enter your code' }), sent, h('div', { class: 'field' }, h('label', { for: 'otp-input', text: '6-digit code' }), input),
       msg, verifyBtn, h('div', { class: 'row-between' }, resendBtn, backBtn));
     let timer;
-    const showDev = code => { if (code) { dev.textContent = 'Demo mode: your code is ' + code; dev.hidden = false; } else dev.hidden = true; };
     function cooldown(sec) {
       clearInterval(timer); resendBtn.disabled = true;
       const tick = () => { resendBtn.textContent = sec > 0 ? 'Resend code in ' + sec + 's' : 'Resend code'; if (sec-- <= 0) { clearInterval(timer); resendBtn.disabled = false; } };
@@ -157,10 +156,10 @@
     resendBtn.addEventListener('click', async () => {
       resendBtn.disabled = true; hide(msg);
       const r = await o.resend();
-      if (r.ok) { show(msg, 'A new code has been sent.', 'okay'); showDev(r.data.dev_otp); cooldown(30); }
+      if (r.ok) { show(msg, 'A new code has been sent.', 'okay'); cooldown(30); }
       else { show(msg, r.data.error || 'Could not resend.', 'err'); cooldown(r.data.retry_after || 5); }
     });
-    return { start(info) { sent.textContent = info.sentTo || ''; showDev(info.devOtp); cooldown(30); input.value = ''; verifyBtn.disabled = false; input.focus(); } };
+    return { start(info) { sent.textContent = info.sentTo || ''; cooldown(30); input.value = ''; verifyBtn.disabled = false; input.focus(); } };
   }
 
   // ---- "Continue with Google"

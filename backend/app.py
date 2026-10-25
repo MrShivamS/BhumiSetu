@@ -262,8 +262,11 @@ def issue_otp(user, purpose, channel, destination):
         return {"ok": False, "status": 502,
                 "error": f"We couldn't send the code by {channel}. Try another option."}
     out = {"ok": True}
-    if result["dev"]:
-        out["dev_otp"] = code  # demo mode only
+    # In demo mode the code is printed to the server log (see services.send_otp), never sent to the browser:
+    # anyone who could read it from the response could log in as anybody. OTP_RETURN_IN_RESPONSE=1 exists only
+    # for automated tests and local scripts, and is ignored unless OTP_DEV_MODE=1.
+    if result["dev"] and svc.dev_mode() and os.environ.get("OTP_RETURN_IN_RESPONSE") == "1":
+        out["dev_otp"] = code
     return out
 
 
@@ -479,6 +482,7 @@ def api_otp_verify():
     code = str(d.get("otp", "")).strip()
     if not re.fullmatch(r"\d{6}", code):
         return err("Enter the 6-digit code.", 400)
+    apply_registrar_bootstrap(pend["u"])
     who = dbm.get_db().execute("SELECT role FROM users WHERE id=?", (pend["u"],)).fetchone()
     wrong_app = flavor_mismatch(who["role"]) if who else None
     if wrong_app:
@@ -492,6 +496,7 @@ def api_otp_verify():
     db.execute(f"UPDATE users SET {col}=1, status='active', last_login_at=? WHERE id=?",
                (int(time.time()), pend["u"]))
     db.commit()
+    apply_registrar_bootstrap(pend["u"])       # a first-time sign-up becomes eligible only now, after the contact is verified
     user = db.execute("SELECT * FROM users WHERE id=?", (pend["u"],)).fetchone()
     return jsonify(ok=True, token=start_session(user["id"]), role=user["role"], user=user_json(user))
 
@@ -1228,6 +1233,44 @@ def doc_file(record_id):
     return _file_response(DOC_DIR, row["doc_file"], DOC_MIME[ext], row["doc_name"] or f"document-{record_id}.{ext}")
 
 
+def apply_registrar_bootstrap(only_user_id=None):
+    """Lets the operator name Sub-Registrars in the REGISTRAR_BOOTSTRAP setting instead of running manage.py
+    (useful on hosts without a shell). Format, entries separated by ';':
+        9876543210|Haveli Sub-Registrar Office|411001-411010 ; officer@example.com|Pune SRO|*
+    A person is promoted once they have signed up AND proved the very contact that is listed (email or mobile),
+    otherwise anybody could sign up with a listed number or address and become a registrar.
+    Only people who can edit the server's settings can add to this list. Remove an entry after use if you later
+    demote that person with manage.py, or the next login would promote them again."""
+    raw = os.environ.get("REGISTRAR_BOOTSTRAP", "").strip()
+    if not raw:
+        return
+    db = dbm.get_db()
+    for entry in raw.split(";"):
+        parts = [x.strip() for x in entry.split("|")]
+        who = parts[0].lower() if parts and parts[0] else ""
+        if not who:
+            continue
+        office = parts[1] if len(parts) > 1 else ""
+        try:
+            pins = svc.normalize_pin_spec(parts[2]) if len(parts) > 2 and parts[2] else None
+        except ValueError as exc:
+            log.warning("REGISTRAR_BOOTSTRAP entry '%s' ignored: %s", who, exc)
+            continue
+        if "@" in who:
+            user = db.execute("SELECT * FROM users WHERE email=? AND email_verified=1 AND status='active'", (who,)).fetchone()
+        else:
+            mobile = svc.normalize_mobile(who)
+            user = db.execute("SELECT * FROM users WHERE mobile=? AND mobile_verified=1 AND status='active'", (mobile,)).fetchone() if mobile else None
+        if not user or (only_user_id is not None and user["id"] != only_user_id):
+            continue
+        if user["role"] == "registrar" and (not pins or user["pin_codes"] == pins) and (not office or user["office"] == office):
+            continue
+        db.execute("UPDATE users SET role='registrar', office=COALESCE(NULLIF(?, ''), office), pin_codes=COALESCE(?, pin_codes) WHERE id=?",
+                   (office, pins, user["id"]))
+        log.info("REGISTRAR_BOOTSTRAP: %s is now a Sub-Registrar", who)
+    db.commit()
+
+
 def _startup_checks():
     if not svc.dev_mode():
         if not os.environ.get("ALLOWED_ORIGINS"):
@@ -1241,6 +1284,8 @@ def _startup_checks():
 
 
 _startup_checks()
+with app.app_context():
+    apply_registrar_bootstrap()
 
 
 if __name__ == "__main__":

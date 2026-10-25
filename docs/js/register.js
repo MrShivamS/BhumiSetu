@@ -21,7 +21,7 @@
     if (!r.ok) { BS.setFieldErrors(form, r.data.fields); return BS.show(msg, r.data.error || 'Something went wrong.', 'err'); }
     challenge = r.data.challenge;
     form.hidden = true; alt.hidden = true; otpRoot.hidden = false;
-    flow.start({ sentTo: 'We sent a code to ' + r.data.sent_to + '.', devOtp: r.data.dev_otp });
+    flow.start({ sentTo: 'We sent a code to ' + r.data.sent_to + '.' });
   });
   BS.googleBlock(alt, cfg, null);
 })();
